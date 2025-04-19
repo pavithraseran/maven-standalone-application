@@ -1,9 +1,9 @@
-pipeline {
-    agent any
+pipeline { 
+    agent any 
 
-    tools {
+    tools { 
         maven 'Maven-3.9.9'
-        jdk 'JDK-17'
+        jdk 'JDK-17'   
     }
 
     environment {
@@ -42,24 +42,30 @@ pipeline {
             }
         }
 
-        stage('Deploy to Artifactory - Modern') {
+        stage('Deploy to Artifactory - Classic') {
             steps {
                 script {
-                    def server = Artifactory.server("${ARTIFACTORY_SERVER}")
+                    rtServer(
+                        id: "${ARTIFACTORY_SERVER}",
+                        url: 'https://trialv00e9o.jfrog.io/artifactory/',
+                        credentialsId: 'jfrog_user_pwd'
+                    )
 
-                    def deployer = Artifactory.newMavenDeployer()
-                    deployer.server = server
-                    deployer.releaseRepo = 'libs-release-local'
-                    deployer.snapshotRepo = 'libs-snapshot-local'
+                    rtMavenDeployer(
+                        id: 'Maven-Deployer',
+                        serverId: "${ARTIFACTORY_SERVER}",
+                        releaseRepo: 'libs-release-local',
+                        snapshotRepo: 'libs-snapshot-local'
+                    )
 
-                    def buildInfo = Artifactory.newBuildInfo()
+                    rtMavenRun(
+                        tool: 'Maven-3.9.9',
+                        pom: 'pom.xml',
+                        goals: 'clean install',
+                        deployerId: 'Maven-Deployer'
+                    )
 
-                    deployer.deployPom = true
-                    deployer.deployArtifacts = true
-
-                    deployer.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
-
-                    server.publishBuildInfo buildInfo
+                    rtPublishBuildInfo(serverId: "${ARTIFACTORY_SERVER}")
                 }
             }
         }
@@ -67,7 +73,7 @@ pipeline {
 
     post {
         success {
-            echo ' Modern: Build, analysis, and deployment completed!'
+            echo ' Classic: Build, analysis, and deployment completed!'
         }
         failure {
             echo ' Pipeline failed.'
