@@ -73,7 +73,7 @@ pipeline {
 
     post {
         success {
-            echo ' Classic: Build, analysis, and deployment completed!'
+            echo ' Classic: Build, static code analysis, and deployment completed!'
         }
         failure {
             echo ' Pipeline failed.'
