@@ -43,13 +43,12 @@ pipeline {
         }
 
         stage('Quality Gate') {
-    steps {
-        timeout(time: 2, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
-}
-
 
         stage('Deploy to Artifactory - Classic') {
             steps {
@@ -78,19 +77,21 @@ pipeline {
                 }
             }
         }
-    }
 
-                 stage('Deploy to Dev via Ansible') {
-    steps {
-        sshagent(credentials: ['ansible_ssh_key']) {
-            sh """
-                ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                -i /opt/deployment/ansible/inventory/dev \
-                --vault-password-file /home/ansible/vault_pass.txt
-            """
+        stage('Deploy to Dev via Ansible') {
+            steps {
+                sshagent(credentials: ['ansible_ssh_key']) {
+                    sh """
+                        ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+                        -i /opt/deployment/ansible/inventory/dev \
+                        --vault-password-file /home/ansible/vault_pass.txt
+                    """
+                }
+            }
         }
-    }
-}
+
+    }  // end of stages
+
     post {
         success {
             echo ' Classic: Build, static code analysis, and deployment completed!'
