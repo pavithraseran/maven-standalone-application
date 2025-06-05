@@ -80,7 +80,7 @@ pipeline {
         }
     }
 
-    stage('Deploy to Dev via Ansible') {
+                 stage('Deploy to Dev via Ansible') {
     steps {
         sshagent(credentials: ['ansible_ssh_key']) {
             sh """
