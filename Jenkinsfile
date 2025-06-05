@@ -80,6 +80,17 @@ pipeline {
         }
     }
 
+    stage('Deploy to Dev via Ansible') {
+    steps {
+        sshagent(credentials: ['ansible_ssh_key']) {
+            sh """
+                ansible-playbook /opt/deployment/ansible/deploy-app.yml \
+                -i /opt/deployment/ansible/inventory/dev \
+                --vault-password-file /home/ansible/vault_pass.txt
+            """
+        }
+    }
+}
     post {
         success {
             echo ' Classic: Build, static code analysis, and deployment completed!'
