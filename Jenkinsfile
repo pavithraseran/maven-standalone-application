@@ -83,7 +83,7 @@ pipeline {
                 sshagent(credentials: ['ansible_ssh_key']) {
                     sh """
                         ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                        -i /opt/deployment/ansible/inventory/dev \
+                        -i /opt/deployment/ansible/inventory/dev/dev \
                         --vault-password-file /home/ansible/vault_pass.txt
                     """
                 }
