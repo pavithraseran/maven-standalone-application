@@ -81,22 +81,29 @@ pipeline {
         stage('Deploy to Dev via Ansible') {
             steps {
                 sshagent(credentials: ['ansible_ssh_key']) {
-                    sh """
-                        ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 << 'EOF'
+                        echo "[INFO] Ansible PATH: \$PATH"
+                        echo "[INFO] Checking Ansible installation..."
+                        which ansible-playbook
+
+                        echo "[INFO] Running Ansible playbook for DEV deployment"
+                        /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
                         -i /opt/deployment/ansible/inventory/dev/dev \
                         --vault-password-file /home/ansible/vault_pass.txt
-                    """
+                        EOF
+                    '''
                 }
             }
         }
-    }  // end of stages
+    }
 
     post {
         success {
-            echo ' Classic: Build, static code analysis, and deployment completed!'
+            echo '✅ Classic: Build, static code analysis, artifact upload, and Ansible deployment completed!'
         }
         failure {
-            echo ' Pipeline failed.'
+            echo '❌ Pipeline failed. Check logs for errors.'
         }
     }
 }
