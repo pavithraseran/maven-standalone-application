@@ -83,18 +83,16 @@ pipeline {
                 sshagent(credentials: ['ansible_ssh_key']) {
                     withCredentials([string(credentialsId: 'ansible_vault_pass', variable: 'VAULT_PASS')]) {
                         sh '''
-                            echo "[INFO] Sending vault password to Ansible control node..."
-                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 "echo $VAULT_PASS > /tmp/vault_pass.txt && chmod 600 /tmp/vault_pass.txt"
+                            echo '[INFO] Sending vault password to Ansible control node...'
+                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 'echo "$VAULT_PASS" > /tmp/vault_pass.txt && chmod 600 /tmp/vault_pass.txt'
 
-                            echo "[INFO] Running Ansible playbook on control node..."
+                            echo '[INFO] Running Ansible playbook...'
                             ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 '
-                                /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                                -i /opt/deployment/ansible/inventory/dev/dev \
-                                --vault-password-file /tmp/vault_pass.txt
-                            '
+                            ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+                            -i /opt/deployment/ansible/inventory/dev/dev \
+                            --vault-password-file /tmp/vault_pass.txt'
 
-                            echo "[INFO] Cleaning up vault password on control node..."
-                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 "rm -f /tmp/vault_pass.txt"
+                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 'rm -f /tmp/vault_pass.txt'
                         '''
                     }
                 }
@@ -104,10 +102,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Build, scan, deployment completed successfully!'
+            echo '✅ Build, analysis, deployment all completed!'
         }
         failure {
-            echo '❌ Pipeline failed. Please check the logs.'
+            echo '❌ Pipeline failed. Check logs for details.'
         }
     }
 }
