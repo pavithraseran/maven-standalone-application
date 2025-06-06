@@ -80,8 +80,8 @@ pipeline {
 
         stage('Deploy to Dev via Ansible') {
             steps {
-                sshagent(credentials: ['ansible']) {
-                    withCredentials([string(credentialsId: 'vault_pass', variable: 'VAULT_PASS')]) {
+                sshagent(credentials: ['ansible_ssh_key']) {
+                    withCredentials([string(credentialsId: 'ansible_vault_pass', variable: 'VAULT_PASS')]) {
                         sh '''
                             echo '[INFO] Creating vault password file...'
                             echo "$VAULT_PASS" > /tmp/vault_pass.txt
