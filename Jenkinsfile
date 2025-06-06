@@ -89,10 +89,12 @@ pipeline {
 
                             echo '[INFO] Running Ansible playbook...'
                             ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 << EOF
-                            /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                            -i /opt/deployment/ansible/inventory/dev/dev \
-                            --vault-password-file /tmp/vault_pass.txt
-                            EOF
+/usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+ -i /opt/deployment/ansible/inventory/dev/dev \
+ --vault-password-file /tmp/vault_pass.txt
+EOF
+
+                            rm -f /tmp/vault_pass.txt
                         '''
                     }
                 }
