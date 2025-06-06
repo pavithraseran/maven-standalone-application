@@ -20,12 +20,18 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
         stage('SonarCloud Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE}") {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                         sh """
-                            mvn clean verify sonar:sonar \
+                            mvn sonar:sonar \
                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                             -Dsonar.organization=${SONAR_ORG} \
                             -Dsonar.host.url=https://sonarcloud.io \
@@ -44,7 +50,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Artifactory') {
+        stage('Deploy to Artifactory - Classic') {
             steps {
                 script {
                     rtServer(
@@ -74,25 +80,35 @@ pipeline {
 
         stage('Deploy to Dev via Ansible') {
             steps {
-                sh '''
-                    ssh -i ~/downloads/ec2pemfile/pavi.pem -o StrictHostKeyChecking=no ubuntu@172.31.6.90 << 'EOF'
-                      sudo su - ansible
-                      echo "[INFO] Running Ansible playbook for DEV deployment..."
-                      ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                        -i /opt/deployment/ansible/inventory/dev/dev \
-                        --vault-password-file /home/ansible/vault_pass.txt
-                    EOF
-                '''
+                sshagent(credentials: ['ansible_ssh_key']) {
+                    withCredentials([string(credentialsId: 'ansible_vault_pass', variable: 'VAULT_PASS')]) {
+                        sh '''
+                            echo "[INFO] Creating vault password file..."
+                            echo "$VAULT_PASS" > /tmp/vault_pass.txt
+                            chmod 600 /tmp/vault_pass.txt
+
+                            echo "[INFO] Running Ansible playbook..."
+                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 << 'EOF'
+                                /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+                                -i /opt/deployment/ansible/inventory/dev/dev \
+                                --vault-password-file /tmp/vault_pass.txt
+                            EOF
+
+                            echo "[INFO] Cleaning up vault password file..."
+                            rm -f /tmp/vault_pass.txt
+                        '''
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build, SonarCloud scan, Artifactory upload, and Ansible deployment completed successfully!'
+            echo '✅ Pipeline: Build, test, analysis, artifact push, and deployment successful!'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs for details.'
+            echo '❌ Pipeline failed. Check logs for errors.'
         }
     }
 }
