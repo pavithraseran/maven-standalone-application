@@ -1,9 +1,9 @@
-pipeline { 
-    agent any 
+pipeline {
+    agent any
 
-    tools { 
+    tools {
         maven 'Maven-3.9.9'
-        jdk 'JDK-17'   
+        jdk 'JDK-17'
     }
 
     environment {
@@ -80,22 +80,19 @@ pipeline {
 
         stage('Deploy to Dev via Ansible') {
             steps {
-                sshagent(credentials: ['ansible_ssh_key']) {
-                    withCredentials([string(credentialsId: 'ansible_vault_pass', variable: 'VAULT_PASS')]) {
+                sshagent(credentials: ['ansible']) {
+                    withCredentials([string(credentialsId: 'vault_pass', variable: 'VAULT_PASS')]) {
                         sh '''
-                            echo "[INFO] Creating vault password file..."
+                            echo '[INFO] Creating vault password file...'
                             echo "$VAULT_PASS" > /tmp/vault_pass.txt
                             chmod 600 /tmp/vault_pass.txt
 
-                            echo "[INFO] Running Ansible playbook..."
-                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 << 'EOF'
-                                /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
-                                -i /opt/deployment/ansible/inventory/dev/dev \
-                                --vault-password-file /tmp/vault_pass.txt
+                            echo '[INFO] Running Ansible playbook...'
+                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 << EOF
+                            /usr/bin/ansible-playbook /opt/deployment/ansible/deploy_app.yml \
+                            -i /opt/deployment/ansible/inventory/dev/dev \
+                            --vault-password-file /tmp/vault_pass.txt
                             EOF
-
-                            echo "[INFO] Cleaning up vault password file..."
-                            rm -f /tmp/vault_pass.txt
                         '''
                     }
                 }
@@ -105,10 +102,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline: Build, test, analysis, artifact push, and deployment successful!'
+            echo '✅ Build, analysis, deployment all completed!'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs for errors.'
+            echo '❌ Pipeline failed. Check logs for details.'
         }
     }
 }
