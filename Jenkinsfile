@@ -84,7 +84,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'ansible_vault_pass', variable: 'VAULT_PASS')]) {
                         sh '''
                             echo '[INFO] Sending vault password to Ansible control node...'
-                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 'echo "$VAULT_PASS" > /tmp/vault_pass.txt && chmod 600 /tmp/vault_pass.txt'
+                            ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 "echo ${VAULT_PASS} > /tmp/vault_pass.txt && chmod 600 /tmp/vault_pass.txt"
 
                             echo '[INFO] Running Ansible playbook...'
                             ssh -o StrictHostKeyChecking=no ansible@172.31.6.90 '
