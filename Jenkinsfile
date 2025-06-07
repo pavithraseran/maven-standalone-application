@@ -62,8 +62,8 @@ pipeline {
                     rtMavenDeployer(
                         id: 'Maven-Deployer',
                         serverId: "${ARTIFACTORY_SERVER}",
-                        releaseRepo: 'libs-release-local',
                         snapshotRepo: 'libs-snapshot-local'
+                        // releaseRepo: 'libs-release-local',
                     )
 
                     rtMavenRun(
